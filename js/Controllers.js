@@ -29,9 +29,9 @@ class UserManualController extends TrafficController {
 class AITrafficController extends TrafficController {
     constructor(intersection) {
         super(intersection, true);
-        this.minGreenTime = 3;  // Minimum seconds a light stays green
-        this.maxGreenTime = 15; // Max seconds a light stays green
-        this.evaluationInterval = 1; // Evaluate every second
+        this.minGreenTime = 2;  // Reduced from 3 to allow faster flushing
+        this.maxGreenTime = 12; // Reduced from 15 to prevent long starvation
+        this.evaluationInterval = 0.1; // Evaluate 10 times per second instead of 1
         
         this.greenTimer = 0;
         this.evalTimer = 0;
@@ -39,28 +39,47 @@ class AITrafficController extends TrafficController {
 
     calculateClusterPriority(clusterLines) {
         let count = 0;
-        let waitTime = 0;
+        let waitTimeScore = 0;
+        let approachingCount = 0;
         let hasEmergency = false;
+        
+        const detectionRange = 250; 
+        const { cx, cy } = this.intersection;
 
         clusterLines.forEach(lane => {
             const vehicles = this.intersection.lanes[lane];
             vehicles.forEach(v => {
-                if (!v.hasPassed) {
+                if (v.hasPassed) return;
+
+                // Check distance to intersection center
+                let distToCenter = Infinity;
+                if (lane === 'N') distToCenter = cy - v.y;
+                if (lane === 'S') distToCenter = v.y - cy;
+                if (lane === 'E') distToCenter = v.x - cx;
+                if (lane === 'W') distToCenter = cx - v.x;
+
+                // If within detection range AND moving towards center
+                if (distToCenter > 0 && distToCenter < detectionRange) {
                     count++;
-                    waitTime += v.waitingTime;
+                    if (v.speed < 0.5) {
+                        // Exponential weight for wait time to prevent starvation
+                        waitTimeScore += Math.pow(v.waitingTime + 1, 1.5);
+                    } else {
+                        approachingCount++;
+                    }
                     if (v.isEmergency) hasEmergency = true;
                 }
             });
         });
 
-        // Priority formula: waitTime holds more weight to avoid starvation
-        let priority = count + (waitTime * 2);
+        // Priority formula: waitTime + current volume + bonus for moving clusters
+        let priority = count + waitTimeScore + (approachingCount * 0.5);
         
         if (hasEmergency) {
-            priority += 10000; // Immediate override
+            priority += 10000;
         }
 
-        return { priority, count, hasEmergency };
+        return { priority, count, approachingCount, hasEmergency };
     }
 
     update(deltaTime) {
@@ -90,17 +109,25 @@ class AITrafficController extends TrafficController {
             // Determine which axis needs green the most
             const currentAxis = this.intersection.activeSignal;
             const currentPriority = currentAxis === 'NS' ? nsStats.priority : ewStats.priority;
+            const currentApproaching = currentAxis === 'NS' ? nsStats.approachingCount : ewStats.approachingCount;
             const oppositePriority = currentAxis === 'NS' ? ewStats.priority : nsStats.priority;
 
-            // If opposite priority is significantly higher, or we reached max green time
-            if (this.greenTimer >= this.maxGreenTime) {
-                const newAxis = currentAxis === 'NS' ? 'EW' : 'NS';
-                this.switchSignal(newAxis);
-            } 
-            else if (oppositePriority > currentPriority * 1.5 && oppositePriority > 5) {
-                // Heuristic: If opposite is 50% more crowded/waiting
-                const newAxis = currentAxis === 'NS' ? 'EW' : 'NS';
-                this.switchSignal(newAxis);
+            // STRATEGY 1: Empty Lane Early Switch
+            // If current green has no approaching traffic and opposite has waiting traffic, switch immediately
+            if (currentApproaching === 0 && oppositePriority > 1 && this.greenTimer > 0.5) {
+                this.switchSignal(currentAxis === 'NS' ? 'EW' : 'NS');
+                return;
+            }
+
+            // Enforce minimum green time for stability unless lane is empty
+            if (this.greenTimer < this.minGreenTime) return;
+
+            // STRATEGY 2: Throughput Optimization
+            // If opposite priority is higher, switch to clear the backlog
+            if (this.greenTimer >= this.maxGreenTime || oppositePriority > currentPriority * 1.2) {
+                if (oppositePriority > 0) {
+                    this.switchSignal(currentAxis === 'NS' ? 'EW' : 'NS');
+                }
             }
         }
     }
