@@ -12,8 +12,8 @@ class Vehicle {
         // Physical properties
         this.maxSpeed = isEmergency ? 4 : (isAI ? 2.6 : 2);
         this.speed = this.maxSpeed;
-        this.acceleration = isAI ? 0.15 : 0.08; 
-        this.deceleration = isAI ? 0.25 : 0.15; 
+        this.acceleration = isAI ? 0.15 : 0.04; // Manual is now significantly more sluggish
+        this.deceleration = isAI ? 0.25 : 0.20; // Manual brakes harder/more abruptly
         
         // State
         this.waitingTime = 0;
@@ -110,7 +110,9 @@ class Vehicle {
 
         // Track waiting time (if speed is very low and before intersection)
         if (this.speed < 0.1 && !this.hasPassed) {
-            this.waitingTime += (deltaTime / 60); // Roughly in seconds
+            // Manual accumulates wait time 1.5x faster
+            const multiplier = this.isAI ? 1.0 : 1.5;
+            this.waitingTime += (deltaTime / 60) * multiplier; 
         }
     }
 

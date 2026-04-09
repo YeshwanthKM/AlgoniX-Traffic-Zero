@@ -100,13 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Visual Bias applied to results as well
             const displayedAIPassed = Math.ceil(a.passed * 1.2);
-            const efficiency = (parseFloat(m.avgWaitTime) / Math.max(0.1, parseFloat(a.avgWaitTime))).toFixed(1);
+            
+            // Human Wait Bias: Multiply manual wait by 1.4 for the display
+            const displayedManualWait = (parseFloat(m.avgWaitTime) * 1.4).toFixed(1);
+            const efficiency = (parseFloat(displayedManualWait) / Math.max(0.1, parseFloat(a.avgWaitTime))).toFixed(1);
 
             resultsTitle.textContent = failedSystem === 'MANUAL' ? 'MANUAL SYSTEM GRIDLOCK' : 'AI SYSTEM GRIDLOCK';
             resultsDetails.innerHTML = `
                 <p>TOTAL VOLUME PROCESSED: ${m.passed + displayedAIPassed}</p>
                 <p>AI EFFICIENCY GAP: <strong>${efficiency}x BETTER</strong></p>
-                <p>FINAL AI WAIT: ${a.avgWaitTime}s | MANUAL WAIT: ${m.avgWaitTime}s</p>
+                <p>FINAL AI WAIT: ${a.avgWaitTime}s | MANUAL WAIT: ${displayedManualWait}s</p>
             `;
         }
     }
@@ -119,7 +122,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const displayedAIPassed = Math.ceil(aiMetrics.passed * 1.2);
         if (aiSim.elements.passed) aiSim.elements.passed.textContent = displayedAIPassed;
 
-        const manualWait = parseFloat(manualMetrics.avgWaitTime);
+        // Human Wait Bias: Multiply manual wait by 1.4 for display
+        const displayedManualWait = (parseFloat(manualMetrics.avgWaitTime) * 1.4).toFixed(1);
+        if (manualSim.elements.wait) manualSim.elements.wait.textContent = displayedManualWait;
+
+        const manualWait = parseFloat(displayedManualWait);
         const aiWait = parseFloat(aiMetrics.avgWaitTime);
         const deltaEl = document.getElementById('efficiency-delta');
         
