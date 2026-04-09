@@ -23,10 +23,10 @@ class Intersection {
         this.activeSignal = 'NS'; 
     }
 
-    spawnVehicle() {
-        // Randomly pick a lane
+    spawnVehicle(targetLane = null, isEmergency = null) {
+        // Randomly pick a lane if not specified
         const laneKeys = ['N', 'S', 'E', 'W'];
-        const randomLane = laneKeys[Math.floor(Math.random() * laneKeys.length)];
+        const randomLane = targetLane || laneKeys[Math.floor(Math.random() * laneKeys.length)];
         
         // Safety check: Don't spawn if another car is still at the spawn point
         const laneVehicles = this.lanes[randomLane];
@@ -43,10 +43,10 @@ class Intersection {
             if (distFromSpawn < 80) return null; // Too crowded at spawn point
         }
 
-        // 5% chance of emergency vehicle
-        const isEmergency = Math.random() < 0.05;
+        // 5% chance of emergency vehicle if not specified
+        const emergencyFlag = isEmergency !== null ? isEmergency : Math.random() < 0.05;
         
-        const v = new Vehicle(randomLane, isEmergency);
+        const v = new Vehicle(randomLane, emergencyFlag);
         v.initPosition(this.width, this.height, this.laneWidth);
         
         this.lanes[randomLane].push(v);

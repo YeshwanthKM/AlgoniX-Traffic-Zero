@@ -27,6 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastTime = performance.now();
     let animationFrameId = null;
     let isRunning = false;
+    
+    // Shared Spawner for Synchronization
+    let sharedSpawnTimer = 0;
+    let sharedSpawnRate = 1.2;
 
     function gameLoop(currentTime) {
         if (!isRunning) return;
@@ -40,10 +44,54 @@ document.addEventListener('DOMContentLoaded', () => {
         manualSim.update(dt);
         aiSim.update(dt);
 
+        // SYNCED SPAWNING
+        sharedSpawnTimer += (dt / 1000);
+        if (sharedSpawnTimer >= sharedSpawnRate) {
+            sharedSpawnTimer = 0;
+            
+            const lanes = ['N', 'S', 'E', 'W'];
+            const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
+            const isEmergency = Math.random() < 0.05;
+
+            // Spawn in BOTH simulations at once
+            manualSim.forceSpawn(randomLane, isEmergency);
+            aiSim.forceSpawn(randomLane, isEmergency);
+
+            // Randomize next interval
+            sharedSpawnRate = 0.5 + Math.random() * 1.5;
+        }
+
         manualSim.draw();
         aiSim.draw();
 
+        updateComparisonUI();
+
         animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    function updateComparisonUI() {
+        const manualMetrics = manualSim.intersection.getMetrics();
+        const aiMetrics = aiSim.intersection.getMetrics();
+        
+        const manualWait = parseFloat(manualMetrics.avgWaitTime);
+        const aiWait = parseFloat(aiMetrics.avgWaitTime);
+        const deltaEl = document.getElementById('efficiency-delta');
+        
+        if (deltaEl) {
+            if (manualWait === 0) {
+                deltaEl.textContent = "AI SYSTEM SYNCED";
+                deltaEl.classList.remove('better');
+            } else {
+                const improvement = ((manualWait - aiWait) / manualWait * 100).toFixed(0);
+                if (improvement > 0) {
+                    deltaEl.textContent = `AI SYSTEM EFFICIENCY: +${improvement}%`;
+                    deltaEl.classList.add('better');
+                } else {
+                    deltaEl.textContent = `AI SYSTEM SYNCED`;
+                    deltaEl.classList.remove('better');
+                }
+            }
+        }
     }
 
     // Controls

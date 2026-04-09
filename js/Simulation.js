@@ -84,19 +84,13 @@ class Simulation {
         // Update physics
         this.intersection.update(normalizedDelta);
 
-        // Handle Spawning
-        this.spawnTimer += (normalizedDelta / 60);
-        if (this.spawnTimer >= this.spawnRate) {
-            this.spawnTimer = 0;
-            this.intersection.spawnVehicle();
-            
-            // Randomize spawn rate slightly for natural traffic
-            this.spawnRate = 0.5 + Math.random() * 1.5;
-        }
-
         // Periodically update UI so we don't kill performance 
         // deltaTime acts as a random frame tick, we can just do it every frame for a simple UI
         this.updateMetricsUI();
+    }
+
+    forceSpawn(lane, isEmergency) {
+        return this.intersection.spawnVehicle(lane, isEmergency);
     }
 
     draw() {
