@@ -79,6 +79,17 @@
         </div>
     </div>
 
+    <div id="results-overlay" class="results-overlay">
+        <div class="results-content neon-card">
+            <h2 id="results-title" class="card-title" style="font-size: 1.8rem; color: var(--danger);">SIMULATION TERMINATED</h2>
+            <div id="results-details" class="results-details">
+                <!-- Injected via JS -->
+            </div>
+            <button onclick="document.getElementById('btn-start').click()" class="btn-launch" style="margin-top: 20px;">Restart Challenge</button>
+            <button onclick="document.getElementById('btn-exit').click()" class="btn-launch secondary" style="margin-top: 10px; font-size: 0.8rem; padding: 10px 20px;">Exit</button>
+        </div>
+    </div>
+
     <script src="js/Vehicle.js"></script>
     <script src="js/Intersection.js"></script>
     <script src="js/Controllers.js"></script>

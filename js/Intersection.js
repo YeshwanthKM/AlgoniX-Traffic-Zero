@@ -246,7 +246,31 @@ class Intersection {
         const avgWaitTime = this.totalPassed > 0 ? (this.totalWaitTime / this.totalPassed).toFixed(1) : "0.0";
         return {
             passed: this.totalPassed,
-            avgWaitTime: avgWaitTime
+            avgWaitTime: avgWaitTime,
+            isGridlocked: this.checkGridlock()
         };
+    }
+
+    checkGridlock() {
+        // Condition 1: Too many vehicles in a single lane
+        for (let lane in this.lanes) {
+            if (this.lanes[lane].length >= 15) return true;
+            
+            // Condition 2: Vehicle is stuck at the spawn point (upstream backup)
+            const vehicles = this.lanes[lane];
+            if (vehicles.length > 5) {
+                const lastV = vehicles[vehicles.length - 1];
+                const spawnDistance = Math.max(this.width, this.height) / 2 + 50;
+                let distFromSpawn = 0;
+                if (lane === 'N') distFromSpawn = lastV.y - (this.cy - spawnDistance);
+                if (lane === 'S') distFromSpawn = (this.cy + spawnDistance) - lastV.y;
+                if (lane === 'E') distFromSpawn = (this.cx + spawnDistance) - lastV.x;
+                if (lane === 'W') distFromSpawn = lastV.x - (this.cx - spawnDistance);
+
+                // If the newest car can't move away from spawn point, it's a gridlock
+                if (distFromSpawn < 30 && lastV.speed < 0.1) return true;
+            }
+        }
+        return false;
     }
 }

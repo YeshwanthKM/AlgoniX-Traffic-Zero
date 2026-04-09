@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Shared Spawner for Synchronization
     let sharedSpawnTimer = 0;
-    let sharedSpawnRate = 1.2;
+    let baseSpawnRate = 1.5; // Starting rate
+    let sharedSpawnRate = baseSpawnRate;
+    let startTime = 0;
 
     function gameLoop(currentTime) {
         if (!isRunning) return;
@@ -57,16 +59,53 @@ document.addEventListener('DOMContentLoaded', () => {
             manualSim.forceSpawn(randomLane, isEmergency);
             aiSim.forceSpawn(randomLane, isEmergency);
 
-            // Randomize next interval
-            sharedSpawnRate = 0.5 + Math.random() * 1.5;
+            // STRESS TEST SCALING: Gradually decrease the interval
+            // Every vehicle spawned makes the next one arrive slightly faster
+            const elapsedTime = (currentTime - startTime) / 1000;
+            const difficultyScale = Math.max(0.4, baseSpawnRate - (elapsedTime / 60)); // Min 0.4s interval
+            sharedSpawnRate = (0.5 * difficultyScale) + (Math.random() * difficultyScale);
         }
 
         manualSim.draw();
         aiSim.draw();
 
         updateComparisonUI();
+        checkFailureState();
 
         animationFrameId = requestAnimationFrame(gameLoop);
+    }
+
+    function checkFailureState() {
+        const manualMetrics = manualSim.intersection.getMetrics();
+        const aiMetrics = aiSim.intersection.getMetrics();
+
+        if (manualMetrics.isGridlocked || aiMetrics.isGridlocked) {
+            isRunning = false;
+            cancelAnimationFrame(animationFrameId);
+            showResults(manualMetrics.isGridlocked ? 'MANUAL' : 'AI');
+        }
+    }
+
+    function showResults(failedSystem) {
+        const resultsOverlay = document.getElementById('results-overlay');
+        const resultsTitle = document.getElementById('results-title');
+        const resultsDetails = document.getElementById('results-details');
+
+        if (resultsOverlay) {
+            resultsOverlay.style.display = 'flex';
+            setTimeout(() => resultsOverlay.style.opacity = '1', 10);
+            
+            const m = manualSim.intersection.getMetrics();
+            const a = aiSim.intersection.getMetrics();
+            const efficiency = (parseFloat(m.avgWaitTime) / Math.max(0.1, parseFloat(a.avgWaitTime))).toFixed(1);
+
+            resultsTitle.textContent = failedSystem === 'MANUAL' ? 'MANUAL SYSTEM GRIDLOCK' : 'AI SYSTEM GRIDLOCK';
+            resultsDetails.innerHTML = `
+                <p>TOTAL VOLUME PROCESSED: ${m.passed + a.passed}</p>
+                <p>AI EFFICIENCY GAP: <strong>${efficiency}x BETTER</strong></p>
+                <p>FINAL AI WAIT: ${a.avgWaitTime}s | MANUAL WAIT: ${m.avgWaitTime}s</p>
+            `;
+        }
     }
 
     function updateComparisonUI() {
@@ -142,8 +181,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isRunning) {
             isRunning = true;
             lastTime = performance.now();
+            startTime = lastTime; // Set start time for scaling
             manualSim.start();
             aiSim.start();
+            
+            // Hide results if visible
+            const resultsOverlay = document.getElementById('results-overlay');
+            if (resultsOverlay) {
+                resultsOverlay.style.opacity = '0';
+                setTimeout(() => resultsOverlay.style.display = 'none', 500);
+            }
             
             // Initial Draw to make sure it looks good before first update
             manualSim.draw();
