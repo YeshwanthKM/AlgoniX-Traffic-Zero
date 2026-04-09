@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnStart = document.getElementById('btn-start');
     const btnPause = document.getElementById('btn-pause');
     const btnReset = document.getElementById('btn-reset');
+    const btnExit = document.getElementById('btn-exit');
+    const systemStatus = document.querySelector('.system-status');
 
     // Init Manual Simulation
     const manualElements = {
@@ -56,11 +58,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     btnHomeStart.addEventListener('click', () => {
-        homeScreen.style.opacity = '0';
+        if (systemStatus) {
+            systemStatus.textContent = 'SYSTEM ONLINE - PROTOCOL INITIATED';
+            systemStatus.style.color = 'var(--primary)';
+        }
+        
         setTimeout(() => {
-            homeScreen.style.display = 'none';
-            btnStart.click(); // Automatically trigger start
-        }, 500);
+            homeScreen.style.opacity = '0';
+            setTimeout(() => {
+                homeScreen.style.display = 'none';
+                btnStart.click(); // Automatically trigger start
+            }, 500);
+        }, 600);
+    });
+
+    btnExit.addEventListener('click', () => {
+        // Reset Simulation
+        btnReset.click();
+        
+        // Show Home Screen
+        homeScreen.style.display = 'flex';
+        // Delay needed for opacity transition
+        setTimeout(() => {
+            homeScreen.style.opacity = '1';
+        }, 10);
+        
+        // Reset status
+        if (systemStatus) {
+            systemStatus.textContent = 'SYSTEM OFFLINE';
+            systemStatus.style.color = 'var(--danger)';
+        }
     });
 
     btnStart.addEventListener('click', () => {
