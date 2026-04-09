@@ -79,9 +79,31 @@ class Intersection {
                     if (lane === 'W') distanceToObstacle = (vAhead.x - vAhead.length/2) - (v.x + v.length/2);
                 }
 
-                // 2. Check distance to stop line IF light is RED
-                // We only care if the vehicle hasn't passed the stop line yet
-                if (!isLaneGreen && !v.hasPassed) {
+                // 2. Check distance to stop line 
+                // A vehicle must stop if:
+                // a) The light is RED
+                // b) OR a vehicle from a perpendicular lane is currently inside the intersection center
+                
+                const perpendicularLanes = (lane === 'N' || lane === 'S') ? ['E', 'W'] : ['N', 'S'];
+                let isIntersectionBlocked = false;
+                const centerBoxMargin = 5; // Slight margin for safety
+                
+                for (let pLane of perpendicularLanes) {
+                    for (let otherV of this.lanes[pLane]) {
+                        // Check if other vehicle is spatially inside the center square
+                        const halfSize = (this.intersectionSize / 2) + centerBoxMargin;
+                        const inBoxX = otherV.x > this.cx - halfSize && otherV.x < this.cx + halfSize;
+                        const inBoxY = otherV.y > this.cy - halfSize && otherV.y < this.cy + halfSize;
+                        
+                        if (inBoxX && inBoxY) {
+                            isIntersectionBlocked = true;
+                            break;
+                        }
+                    }
+                    if (isIntersectionBlocked) break;
+                }
+
+                if ((!isLaneGreen || isIntersectionBlocked) && !v.hasPassed) {
                     let distToStopLine = Infinity;
                     if (lane === 'N') distToStopLine = (this.cy - stopLine) - (v.y + v.length/2);
                     if (lane === 'S') distToStopLine = (v.y - v.length/2) - (this.cy + stopLine);

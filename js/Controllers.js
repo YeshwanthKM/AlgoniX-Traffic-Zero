@@ -29,9 +29,9 @@ class UserManualController extends TrafficController {
 class AITrafficController extends TrafficController {
     constructor(intersection) {
         super(intersection, true);
-        this.minGreenTime = 2;  // Reduced from 3 to allow faster flushing
-        this.maxGreenTime = 12; // Reduced from 15 to prevent long starvation
-        this.evaluationInterval = 0.1; // Evaluate 10 times per second instead of 1
+        this.minGreenTime = 0.5; // Grandmaster level: nearly zero latency
+        this.maxGreenTime = 12; 
+        this.evaluationInterval = 0.05; // 20 times per second
         
         this.greenTimer = 0;
         this.evalTimer = 0;
@@ -43,7 +43,7 @@ class AITrafficController extends TrafficController {
         let approachingCount = 0;
         let hasEmergency = false;
         
-        const detectionRange = 250; 
+        const detectionRange = 350; // See further ahead for better clustering
         const { cx, cy } = this.intersection;
 
         clusterLines.forEach(lane => {
@@ -124,7 +124,7 @@ class AITrafficController extends TrafficController {
 
             // STRATEGY 2: Throughput Optimization
             // If opposite priority is higher, switch to clear the backlog
-            if (this.greenTimer >= this.maxGreenTime || oppositePriority > currentPriority * 1.2) {
+            if (this.greenTimer >= this.maxGreenTime || oppositePriority > currentPriority * 1.05) {
                 if (oppositePriority > 0) {
                     this.switchSignal(currentAxis === 'NS' ? 'EW' : 'NS');
                 }
