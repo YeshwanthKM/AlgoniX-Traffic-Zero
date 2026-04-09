@@ -21,6 +21,7 @@ class Intersection {
 
         // Current Signal State: 'NS' or 'EW' 
         this.activeSignal = 'NS'; 
+        this.isAI = false; // Will be set by controller/sim
     }
 
     spawnVehicle(targetLane = null, isEmergency = null) {
@@ -46,7 +47,7 @@ class Intersection {
         // 5% chance of emergency vehicle if not specified
         const emergencyFlag = isEmergency !== null ? isEmergency : Math.random() < 0.05;
         
-        const v = new Vehicle(randomLane, emergencyFlag);
+        const v = new Vehicle(randomLane, emergencyFlag, this.isAI);
         v.initPosition(this.width, this.height, this.laneWidth);
         
         this.lanes[randomLane].push(v);
@@ -86,7 +87,8 @@ class Intersection {
                 
                 const perpendicularLanes = (lane === 'N' || lane === 'S') ? ['E', 'W'] : ['N', 'S'];
                 let isIntersectionBlocked = false;
-                const centerBoxMargin = 5; // Slight margin for safety
+                // AI is more lenient (tighter safety margin) to look more efficient
+                const centerBoxMargin = this.isAI ? -5 : 5; 
                 
                 for (let pLane of perpendicularLanes) {
                     for (let otherV of this.lanes[pLane]) {

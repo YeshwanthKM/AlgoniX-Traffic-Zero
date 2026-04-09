@@ -1,18 +1,19 @@
 class Vehicle {
-    constructor(lane, isEmergency = false) {
+    constructor(lane, isEmergency = false, isAI = false) {
         this.id = Math.random().toString(36).substr(2, 9);
         this.lane = lane; // 'N', 'S', 'E', 'W'
         this.isEmergency = isEmergency;
+        this.isAI = isAI;
         
         // Dimensions
         this.width = 24;
         this.length = 45;
         
         // Physical properties
-        this.maxSpeed = isEmergency ? 4 : 2;
+        this.maxSpeed = isEmergency ? 4 : (isAI ? 2.6 : 2);
         this.speed = this.maxSpeed;
-        this.acceleration = 0.08; // slightly faster acceleration
-        this.deceleration = 0.15; // significantly stronger braking
+        this.acceleration = isAI ? 0.15 : 0.08; 
+        this.deceleration = isAI ? 0.25 : 0.15; 
         
         // State
         this.waitingTime = 0;

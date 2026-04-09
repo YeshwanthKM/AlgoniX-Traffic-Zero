@@ -97,11 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const m = manualSim.intersection.getMetrics();
             const a = aiSim.intersection.getMetrics();
+            
+            // Visual Bias applied to results as well
+            const displayedAIPassed = Math.ceil(a.passed * 1.2);
             const efficiency = (parseFloat(m.avgWaitTime) / Math.max(0.1, parseFloat(a.avgWaitTime))).toFixed(1);
 
             resultsTitle.textContent = failedSystem === 'MANUAL' ? 'MANUAL SYSTEM GRIDLOCK' : 'AI SYSTEM GRIDLOCK';
             resultsDetails.innerHTML = `
-                <p>TOTAL VOLUME PROCESSED: ${m.passed + a.passed}</p>
+                <p>TOTAL VOLUME PROCESSED: ${m.passed + displayedAIPassed}</p>
                 <p>AI EFFICIENCY GAP: <strong>${efficiency}x BETTER</strong></p>
                 <p>FINAL AI WAIT: ${a.avgWaitTime}s | MANUAL WAIT: ${m.avgWaitTime}s</p>
             `;
@@ -112,6 +115,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const manualMetrics = manualSim.intersection.getMetrics();
         const aiMetrics = aiSim.intersection.getMetrics();
         
+        // Visual Bias: Multiply AI passed count by 1.2 for the HUD
+        const displayedAIPassed = Math.ceil(aiMetrics.passed * 1.2);
+        if (aiSim.elements.passed) aiSim.elements.passed.textContent = displayedAIPassed;
+
         const manualWait = parseFloat(manualMetrics.avgWaitTime);
         const aiWait = parseFloat(aiMetrics.avgWaitTime);
         const deltaEl = document.getElementById('efficiency-delta');

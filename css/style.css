@@ -315,6 +315,11 @@ canvas {
     color: var(--success);
 }
 
+.ai-active .metric strong#ai-passed {
+    color: var(--primary);
+    text-shadow: 0 0 10px var(--primary);
+}
+
 /* SCROLLBAR STYLING */
 ::-webkit-scrollbar {
     width: 6px;

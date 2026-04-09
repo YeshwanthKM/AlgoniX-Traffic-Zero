@@ -12,6 +12,7 @@ class Simulation {
 
         this.isAI = isAI;
         this.intersection = new Intersection(this.width, this.height);
+        this.intersection.isAI = isAI;
         
         if (this.isAI) {
             this.controller = new AITrafficController(this.intersection);
