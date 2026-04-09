@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Zero — Smart AI Sim</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="home-screen">
+        <div class="home-content panel-neon">
+            <h1 class="neon-title text-cyan">Traffic Zero</h1>
+            <p>Experience the difference between standard fixed timers and dynamic AI traffic management.</p>
+            <button id="btn-home-start" class="btn btn-neon-pink">Launch Simulation</button>
+        </div>
+    </div>
+
+    <div class="top-controls panel-glass">
+        <h1>Traffic Zero</h1>
+        <div class="btn-group">
+            <button id="btn-start" class="btn primary">Start</button>
+            <button id="btn-pause" class="btn secondary">Pause</button>
+            <button id="btn-reset" class="btn danger">Reset</button>
+        </div>
+    </div>
+
+    <div class="split-screen">
+        <!-- AI SIMULATION -->
+        <div class="sim-wrapper ai-active" id="ai-wrapper">
+            <div class="sim-header panel-glass">
+                <h2>Smart AI System</h2>
+                <span class="badge blue">Dynamic Priority Queue</span>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="canvas-ai"></canvas>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="metrics-panel panel-glass">
+                <div class="metric">
+                    <span>Passed</span>
+                    <strong id="ai-passed">0</strong>
+                </div>
+                <div class="metric">
+                    <span>Avg Wait (s)</span>
+                    <strong id="ai-wait">0.0</strong>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- MANUAL SIMULATION -->
+        <div class="sim-wrapper" id="manual-wrapper">
+            <div class="sim-header panel-glass">
+                <h2>User Controlled System</h2>
+                <button id="btn-manual-switch" class="btn secondary">Switch Signal</button>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="canvas-manual"></canvas>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="metrics-panel panel-glass">
+                <div class="metric">
+                    <span>Passed</span>
+                    <strong id="manual-passed">0</strong>
+                </div>
+                <div class="metric">
+                    <span>Avg Wait (s)</span>
+                    <strong id="manual-wait">0.0</strong>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script src="js/Vehicle.js"></script>
+    <script src="js/Intersection.js"></script>
+    <script src="js/Controllers.js"></script>
+    <script src="js/Simulation.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
